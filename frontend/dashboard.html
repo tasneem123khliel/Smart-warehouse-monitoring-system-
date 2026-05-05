@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Smart Warehouse — لوحة التحكم</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+  <style>
+    :root {
+      --bg:        #0a0e1a;
+      --surface:   #111827;
+      --surface2:  #1a2234;
+      --border:    #1f2d45;
+      --accent:    #3b82f6;
+      --accent2:   #10b981;
+      --danger:    #ef4444;
+      --warn:      #f59e0b;
+      --text:      #f1f5f9;
+      --muted:     #64748b;
+      --radius:    14px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Cairo', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* ── Sidebar ────────────────────────────────── */
+    .sidebar {
+      width: 240px;
+      background: var(--surface);
+      border-left: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      padding: 24px 16px;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+    .logo {
+      font-size: 18px;
+      font-weight: 900;
+      color: var(--accent);
+      padding: 0 8px 20px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .logo i { font-size: 22px; }
+    .nav-btn {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 14px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--muted);
+      border: none;
+      background: transparent;
+      font-family: 'Cairo', sans-serif;
+      width: 100%;
+      text-align: right;
+      transition: all .2s;
+    }
+    .nav-btn:hover { background: var(--surface2); color: var(--text); }
+    .nav-btn.active { background: var(--accent); color: #fff; }
+    .nav-btn i { width: 18px; text-align: center; }
+
+    /* ── Main ───────────────────────────────────── */
+    .main {
+      flex: 1;
+      overflow-y: auto;
+      padding: 28px 32px;
+    }
+    .section { display: none; }
+    .section.active { display: block; }
+    h2 { font-size: 22px; font-weight: 700; margin-bottom: 20px; }
+
+    /* ── Cards ──────────────────────────────────── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+    }
+
+    /* ── Stat Cards ─────────────────────────────── */
+    .stats-row { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; margin-bottom: 20px; }
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px 18px;
+    }
+    .stat-card .label { font-size: 12px; color: var(--muted); margin-bottom: 6px; }
+    .stat-card .value { font-size: 26px; font-weight: 700; }
+    .stat-card .value.green { color: var(--accent2); }
+    .stat-card .value.red   { color: var(--danger); }
+    .stat-card .value.blue  { color: var(--accent); }
+
+    /* ── Attendance ─────────────────────────────── */
+    .att-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
+    .btn {
+      padding: 12px 20px;
+      border-radius: 10px;
+      border: none;
+      font-family: 'Cairo', sans-serif;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all .2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .btn-green { background: var(--accent2); color: #fff; }
+    .btn-green:hover { background: #059669; }
+    .btn-red   { background: var(--danger);  color: #fff; }
+    .btn-red:hover   { background: #dc2626; }
+    .btn-blue  { background: var(--accent);  color: #fff; }
+    .btn-blue:hover  { background: #2563eb; }
+    .btn-gray  { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+    .btn-gray:hover  { background: var(--border); }
+
+    /* ── Camera Box (small) ─────────────────────── */
+    .cam-wrap {
+      display: flex;
+      gap: 20px;
+      align-items: flex-start;
+    }
+    .cam-box {
+      background: #000;
+      border-radius: 10px;
+      overflow: hidden;
+      border: 2px solid var(--border);
+      width: 280px;
+      flex-shrink: 0;
+    }
+    .cam-box video {
+      width: 100%;
+      height: 210px;
+      object-fit: cover;
+      display: block;
+    }
+    .cam-box canvas { display: none; }
+    .cam-placeholder {
+      width: 100%;
+      height: 210px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: var(--muted);
+      gap: 8px;
+      font-size: 13px;
+    }
+    .cam-placeholder i { font-size: 32px; }
+    .cam-right { flex: 1; }
+
+    /* ── Result Box ─────────────────────────────── */
+    .result-box {
+      min-height: 60px;
+      padding: 14px;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 600;
+      text-align: center;
+    }
+    .result-success { background: #052e16; border: 1px solid var(--accent2); color: #6ee7b7; }
+    .result-error   { background: #1c0a0a; border: 1px solid var(--danger);  color: #fca5a5; }
+    .result-loading { background: var(--surface2); border: 1px solid var(--border); color: var(--muted); }
+
+    /* ── Table ──────────────────────────────────── */
+    .tbl-wrap { overflow-x: auto; margin-top: 16px; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th { text-align: right; padding: 10px 14px; color: var(--muted); font-weight: 600;
+         border-bottom: 1px solid var(--border); white-space: nowrap; }
+    td { padding: 10px 14px; border-bottom: 1px solid var(--border); }
+    tr:hover td { background: var(--surface2); }
+    .badge {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .badge-in   { background: #052e16; color: #6ee7b7; }
+    .badge-out  { background: #1c0a0a; color: #fca5a5; }
+    .badge-safe { background: #052e16; color: #6ee7b7; }
+    .badge-viol { background: #1c0a0a; color: #fca5a5; }
+
+    /* ── Upload zone ────────────────────────────── */
+    .upload-zone {
+      border: 2px dashed var(--border);
+      border-radius: var(--radius);
+      padding: 32px;
+      text-align: center;
+      cursor: pointer;
+      transition: all .2s;
+      margin-bottom: 14px;
+    }
+    .upload-zone:hover { border-color: var(--accent); background: var(--surface2); }
+    .upload-zone i { font-size: 36px; color: var(--muted); margin-bottom: 10px; display: block; }
+    .upload-zone p { color: var(--muted); font-size: 14px; }
+    .upload-zone input { display: none; }
+    .file-chosen { color: var(--accent); font-weight: 700; font-size: 14px; margin-top: 6px; }
+
+    /* ── Analysis Result ───────────────────────── */
+    .analysis-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin: 16px 0; }
+    .analysis-card { background: var(--surface2); border-radius: 10px; padding: 16px; text-align: center; }
+    .analysis-card .big { font-size: 28px; font-weight: 700; }
+    .analysis-card .lbl { font-size: 12px; color: var(--muted); margin-top: 4px; }
+
+    /* ── Progress bar ───────────────────────────── */
+    .progress-wrap { margin: 12px 0; }
+    .progress-label { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 6px; }
+    .progress-bar { height: 8px; background: var(--surface2); border-radius: 4px; overflow: hidden; }
+    .progress-fill { height: 100%; border-radius: 4px; transition: width .6s; }
+
+    /* ── Register form ──────────────────────────── */
+    .form-group { margin-bottom: 16px; }
+    .form-group label { display: block; font-size: 13px; color: var(--muted); margin-bottom: 6px; }
+    .form-input {
+      width: 100%;
+      padding: 10px 14px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-family: 'Cairo', sans-serif;
+      font-size: 14px;
+      outline: none;
+      transition: border .2s;
+    }
+    .form-input:focus { border-color: var(--accent); }
+
+    /* ── Spinner ────────────────────────────────── */
+    .spinner {
+      width: 20px; height: 20px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+      display: inline-block;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Scrollbar ──────────────────────────────── */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  </style>
+</head>
+<body>
+
+<!-- ══ SIDEBAR ══════════════════════════════════════════ -->
+<div class="sidebar">
+  <div class="logo"><i class="fas fa-warehouse"></i> Smart Warehouse</div>
+  <button class="nav-btn active" onclick="show('attendance')">
+    <i class="fas fa-camera"></i> تسجيل الحضور
+  </button>
+  <button class="nav-btn" onclick="show('helmet')">
+    <i class="fas fa-hard-hat"></i> تحليل الزي الأمني
+  </button>
+  <button class="nav-btn" onclick="show('register')">
+    <i class="fas fa-user-plus"></i> تسجيل موظف جديد
+  </button>
+  <button class="nav-btn" onclick="show('logs')">
+    <i class="fas fa-list"></i> سجل الحضور
+  </button>
+</div>
+
+<!-- ══ MAIN ═════════════════════════════════════════════ -->
+<div class="main">
+
+  <!-- ── ATTENDANCE ─────────────────────────────────── -->
+  <div id="attendance" class="section active">
+    <h2><i class="fas fa-camera" style="color:var(--accent)"></i> تسجيل الحضور والانصراف</h2>
+
+    <!-- Stats row -->
+    <div class="stats-row" id="att-stats">
+      <div class="stat-card"><div class="label">إجمالي الحضور اليوم</div><div class="value blue" id="s-in">—</div></div>
+      <div class="stat-card"><div class="label">إجمالي الخروج اليوم</div><div class="value red" id="s-out">—</div></div>
+      <div class="stat-card"><div class="label">موجودون الآن</div><div class="value green" id="s-inside">—</div></div>
+      <div class="stat-card"><div class="label">موظفون مختلفون</div><div class="value blue" id="s-unique">—</div></div>
+    </div>
+
+    <div class="card">
+      <div class="cam-wrap">
+        <!-- Camera (small) -->
+        <div class="cam-box">
+          <div class="cam-placeholder" id="cam-placeholder">
+            <i class="fas fa-camera-slash"></i>
+            <span>اضغط لفتح الكاميرا</span>
+          </div>
+          <video id="video" autoplay playsinline style="display:none"></video>
+          <canvas id="canvas"></canvas>
+        </div>
+
+        <!-- Controls -->
+        <div class="cam-right">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+            <button class="btn btn-green" onclick="startCam('in')">
+              <i class="fas fa-sign-in-alt"></i> تسجيل حضور
+            </button>
+            <button class="btn btn-red" onclick="startCam('out')">
+              <i class="fas fa-sign-out-alt"></i> تسجيل خروج
+            </button>
+          </div>
+          <button class="btn btn-blue" id="captureBtn" onclick="capture()" style="display:none;width:100%;margin-bottom:14px">
+            <i class="fas fa-camera"></i> التقاط وتسجيل
+          </button>
+          <button class="btn btn-gray" onclick="stopCam()" id="stopBtn" style="display:none;width:100%;margin-bottom:14px">
+            <i class="fas fa-stop"></i> إيقاف الكاميرا
+          </button>
+          <div id="att-result"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── HELMET ANALYSIS ────────────────────────────── -->
+  <div id="helmet" class="section">
+    <h2><i class="fas fa-hard-hat" style="color:var(--warn)"></i> تحليل ارتداء الزي الامني </h2>
+
+    <div class="card" style="max-width:560px">
+      <div class="upload-zone" onclick="document.getElementById('vfile').click()">
+        <i class="fas fa-cloud-upload-alt"></i>
+        <p>اضغط لاختيار فيديو للتحليل</p>
+        <p class="file-chosen" id="fname"></p>
+        <input type="file" id="vfile" accept="video/*" onchange="onFileChosen(this)">
+      </div>
+      <button class="btn btn-blue" onclick="analyzeVideo()" style="width:100%">
+        <i class="fas fa-play-circle"></i> بدء التحليل
+      </button>
+    </div>
+
+    <div id="analysis-result" style="margin-top:20px;max-width:560px"></div>
+  </div>
+
+  <!-- ── REGISTER NEW EMPLOYEE ──────────────────────── -->
+  <div id="register" class="section">
+    <h2><i class="fas fa-user-plus" style="color:var(--accent2)"></i> تسجيل موظف جديد</h2>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;max-width:760px">
+      <!-- Form -->
+      <div class="card">
+        <div class="form-group">
+          <label>الاسم الكامل *</label>
+          <input class="form-input" id="reg-name" placeholder="مثال: Ahmed Hassan" type="text">
+        </div>
+        <div class="form-group">
+          <label>القسم</label>
+          <input class="form-input" id="reg-dept" placeholder="مثال: Warehouse" type="text">
+        </div>
+
+        <div style="margin-bottom:14px">
+          <button class="btn btn-gray" onclick="openRegCam()" style="width:100%">
+            <i class="fas fa-camera"></i> فتح الكاميرا لالتقاط الوجه
+          </button>
+        </div>
+
+        <div class="cam-box" id="reg-cam-box" style="display:none;margin-bottom:14px">
+          <video id="reg-video" autoplay playsinline style="display:block"></video>
+        </div>
+
+        <div id="reg-preview" style="margin-bottom:14px"></div>
+
+        <button class="btn btn-green" onclick="registerEmployee()" style="width:100%">
+          <i class="fas fa-save"></i> حفظ وتسجيل
+        </button>
+
+        <div id="reg-result" style="margin-top:14px"></div>
+      </div>
+
+      <!-- Instructions -->
+      <div class="card">
+        <p style="font-weight:700;margin-bottom:14px;color:var(--accent)">
+          <i class="fas fa-info-circle"></i> تعليمات التسجيل
+        </p>
+        <ul style="list-style:none;display:flex;flex-direction:column;gap:12px;font-size:14px;color:var(--muted)">
+          <li><i class="fas fa-check" style="color:var(--accent2);margin-left:8px"></i> تأكد من الإضاءة الجيدة</li>
+          <li><i class="fas fa-check" style="color:var(--accent2);margin-left:8px"></i> اجلس مباشرة أمام الكاميرا</li>
+          <li><i class="fas fa-check" style="color:var(--accent2);margin-left:8px"></i> تأكد من وضوح الوجه كاملاً</li>
+          <li><i class="fas fa-check" style="color:var(--accent2);margin-left:8px"></i> لا تضع نظارات أو قبعة أثناء التسجيل</li>
+          <li><i class="fas fa-check" style="color:var(--accent2);margin-left:8px"></i> اكتب الاسم باللغة الإنجليزية</li>
+        </ul>
+
+        <hr style="border-color:var(--border);margin:16px 0">
+        <p style="font-size:13px;color:var(--muted)">
+          بعد التسجيل، يمكن للموظف استخدام نظام التعرف على الوجه لتسجيل الحضور والانصراف.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── ATTENDANCE LOGS ─────────────────────────────── -->
+  <div id="logs" class="section">
+    <h2><i class="fas fa-list" style="color:var(--muted)"></i> سجل الحضور</h2>
+
+    <div class="card">
+      <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap">
+        <input class="form-input" id="filter-name" placeholder="بحث باسم الموظف" style="width:200px"
+               oninput="loadLogs()">
+        <select class="form-input" id="filter-action" style="width:140px" onchange="loadLogs()">
+          <option value="">كل العمليات</option>
+          <option value="in">حضور فقط</option>
+          <option value="out">خروج فقط</option>
+        </select>
+        <button class="btn btn-blue" onclick="loadLogs()" style="padding:10px 18px">
+          <i class="fas fa-sync"></i> تحديث
+        </button>
+      </div>
+
+      <div class="tbl-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>الموظف</th>
+              <th>العملية</th>
+              <th>التوقيت</th>
+              <th>المصدر</th>
+            </tr>
+          </thead>
+          <tbody id="logs-body">
+            <tr><td colspan="5" style="text-align:center;color:var(--muted);padding:30px">
+              اضغط تحديث لتحميل البيانات
+            </td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /main -->
+
+<script>
+const API = 'http://localhost:8000';
+let camStream = null;
+let currentAction = 'in';
+let regCamStream = null;
+let capturedFaceBlob = null;
+
+// ══ Navigation ═══════════════════════════════════════════
+function show(id) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  event.currentTarget.classList.add('active');
+  if (id === 'attendance') loadTodayStats();
+  if (id === 'logs') loadLogs();
+}
+
+// ══ Today Stats ═══════════════════════════════════════════
+async function loadTodayStats() {
+  try {
+    const r = await fetch(`${API}/attendance/today`);
+    const d = await r.json();
+    document.getElementById('s-in').textContent     = d.total_in;
+    document.getElementById('s-out').textContent    = d.total_out;
+    document.getElementById('s-inside').textContent = Math.max(0, d.currently_inside);
+    document.getElementById('s-unique').textContent = d.unique_employees;
+  } catch {}
+}
+loadTodayStats();
+
+// ══ Attendance Camera ══════════════════════════════════════
+async function startCam(action) {
+  currentAction = action;
+  stopCam();
+  const video = document.getElementById('video');
+  const ph    = document.getElementById('cam-placeholder');
+  try {
+    camStream = await navigator.mediaDevices.getUserMedia({ video: { width:320, height:240 } });
+    video.srcObject = camStream;
+    video.style.display = 'block';
+    ph.style.display    = 'none';
+    document.getElementById('captureBtn').style.display = 'block';
+    document.getElementById('stopBtn').style.display    = 'block';
+  } catch {
+    showResult('att-result', 'error', 'لا يمكن فتح الكاميرا');
+  }
+}
+
+function stopCam() {
+  if (camStream) {
+    camStream.getTracks().forEach(t => t.stop());
+    camStream = null;
+  }
+  document.getElementById('video').style.display          = 'none';
+  document.getElementById('cam-placeholder').style.display = 'flex';
+  document.getElementById('captureBtn').style.display     = 'none';
+  document.getElementById('stopBtn').style.display        = 'none';
+}
+
+async function capture() {
+  const video  = document.getElementById('video');
+  const canvas = document.getElementById('canvas');
+  canvas.width  = video.videoWidth;
+  canvas.height = video.videoHeight;
+  canvas.getContext('2d').drawImage(video, 0, 0);
+
+  showResult('att-result', 'loading', '<span class="spinner"></span> جاري التعرف على الوجه...');
+
+  canvas.toBlob(async blob => {
+    const fd = new FormData();
+    fd.append('file', blob, 'face.jpg');
+    fd.append('action', currentAction);
+    try {
+      const res  = await fetch(`${API}/attendance/recognize`, { method:'POST', body:fd });
+      const data = await res.json();
+      if (data.status === 'success') {
+        const act = currentAction === 'in' ? 'تم تسجيل الحضور' : 'تم تسجيل الخروج';
+        showResult('att-result', 'success',
+          `<i class="fas fa-check-circle"></i> مرحباً <strong>${data.name}</strong> — ${act}`);
+        stopCam();
+        loadTodayStats();
+      } else {
+        showResult('att-result', 'error',
+          `<i class="fas fa-exclamation-circle"></i> ${data.message}`);
+      }
+    } catch {
+      showResult('att-result', 'error', 'خطأ في الاتصال بالسيرفر');
+    }
+  }, 'image/jpeg', 0.9);
+}
+
+// ══ Helmet Analysis ════════════════════════════════════════
+function onFileChosen(input) {
+  document.getElementById('fname').textContent = input.files[0]?.name || '';
+}
+
+async function analyzeVideo() {
+  const file = document.getElementById('vfile').files[0];
+  if (!file) { alert('اختر فيديو أولاً'); return; }
+
+  const rd = document.getElementById('analysis-result');
+  rd.innerHTML = `<div class="card" style="text-align:center;padding:32px">
+    <div class="spinner" style="width:32px;height:32px;margin:0 auto 12px"></div>
+    <p style="color:var(--muted)">جاري تحليل الفيديو… قد يستغرق بعض الوقت</p>
+  </div>`;
+
+  const fd = new FormData();
+  fd.append('video', file);
+  fd.append('conf_threshold', '0.5');
+  fd.append('sample_every', '5');
+
+  try {
+    const res  = await fetch(`${API}/detect/helmet`, { method:'POST', body:fd });
+    const data = await res.json();
+
+    const isSafe  = data.overall_status === 'SAFE';
+    const compPct = data.compliance_rate ?? 0;
+    const barColor = compPct >= 85 ? 'var(--accent2)' : compPct >= 60 ? 'var(--warn)' : 'var(--danger)';
+
+    rd.innerHTML = `
+    <div class="card">
+      <h3 style="margin-bottom:16px;font-size:16px">نتيجة التحليل — ${data.video_filename}</h3>
+
+      <div class="analysis-grid">
+        <div class="analysis-card">
+          <div class="big blue">${data.total_persons}</div>
+          <div class="lbl">أقصى عدد أشخاص في الفريم</div>
+        </div>
+        <div class="analysis-card">
+          <div class="big green">${data.total_helmets}</div>
+          <div class="lbl">أقصى عدد خوذ في الفريم</div>
+        </div>
+        <div class="analysis-card">
+          <div class="big ${isSafe ? 'green' : 'red'}">${data.total_violations}</div>
+          <div class="lbl">فريمات تحتوي مخالفات</div>
+        </div>
+      </div>
+
+      <div class="progress-wrap">
+        <div class="progress-label">
+          <span>نسبة الامتثال</span>
+          <span style="font-weight:700">${compPct.toFixed(1)}%</span>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill" style="width:${compPct}%;background:${barColor}"></div>
+        </div>
+      </div>
+
+      <div style="margin-top:14px;padding:14px;border-radius:10px;
+           background:${isSafe ? '#052e16' : '#1c0a0a'};
+           border:1px solid ${isSafe ? 'var(--accent2)' : 'var(--danger)'};
+           color:${isSafe ? '#6ee7b7' : '#fca5a5'};
+           font-weight:700;font-size:15px;text-align:center">
+        ${isSafe
+          ? '<i class="fas fa-shield-alt"></i> الوضع آمن — جميع العمال ملتزمون'
+          : '<i class="fas fa-exclamation-triangle"></i> تم رصد مخالفات — يرجى المراجعة'}
+      </div>
+
+      <p style="font-size:12px;color:var(--muted);margin-top:10px;text-align:center">
+        تم التحليل: ${new Date().toLocaleString('ar-EG')} | 
+        إجمالي الفريمات المحللة: ${data.total_frames}
+      </p>
+    </div>`;
+  } catch (e) {
+    rd.innerHTML = `<div class="card result-error">
+      <i class="fas fa-times-circle"></i> حدث خطأ أثناء التحليل: ${e.message}
+    </div>`;
+  }
+}
+
+// ══ Register Employee ══════════════════════════════════════
+async function openRegCam() {
+  const box = document.getElementById('reg-cam-box');
+  const vid = document.getElementById('reg-video');
+  box.style.display = 'block';
+  try {
+    regCamStream = await navigator.mediaDevices.getUserMedia({ video: { width:320, height:240 } });
+    vid.srcObject = regCamStream;
+
+    // auto-capture after 3s
+    setTimeout(() => captureFaceForReg(), 3000);
+  } catch {
+    showResult('reg-result', 'error', 'لا يمكن فتح الكاميرا');
+  }
+}
+
+function captureFaceForReg() {
+  const vid = document.getElementById('reg-video');
+  const c   = document.createElement('canvas');
+  c.width   = vid.videoWidth;
+  c.height  = vid.videoHeight;
+  c.getContext('2d').drawImage(vid, 0, 0);
+
+  c.toBlob(blob => {
+    capturedFaceBlob = blob;
+    const url = URL.createObjectURL(blob);
+    document.getElementById('reg-preview').innerHTML =
+      `<img src="${url}" style="width:100%;border-radius:8px;border:2px solid var(--accent2)">
+       <p style="font-size:12px;color:var(--accent2);margin-top:6px;text-align:center">
+         <i class="fas fa-check"></i> تم التقاط الصورة بنجاح</p>`;
+    if (regCamStream) regCamStream.getTracks().forEach(t => t.stop());
+    document.getElementById('reg-cam-box').style.display = 'none';
+  }, 'image/jpeg', 0.9);
+}
+
+async function registerEmployee() {
+  const name = document.getElementById('reg-name').value.trim();
+  const dept = document.getElementById('reg-dept').value.trim();
+
+  if (!name) {
+    showResult('reg-result', 'error', 'يرجى كتابة اسم الموظف');
+    return;
+  }
+
+  showResult('reg-result', 'loading', '<span class="spinner"></span> جاري التسجيل...');
+
+  try {
+    // 1. Register in DB
+    const dbRes = await fetch(`${API}/employees`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, department: dept || null })
+    });
+
+    if (!dbRes.ok) {
+      const err = await dbRes.json();
+      showResult('reg-result', 'error', err.detail || 'خطأ في التسجيل');
+      return;
+    }
+
+    // 2. Register face via attendance/recognize (registers pickle locally)
+    if (capturedFaceBlob) {
+      const fd = new FormData();
+      fd.append('file', capturedFaceBlob, 'face.jpg');
+      fd.append('employee_name', name);
+      await fetch(`${API}/employees/register-face`, { method:'POST', body:fd });
+    }
+
+    showResult('reg-result', 'success',
+      `<i class="fas fa-check-circle"></i> تم تسجيل الموظف <strong>${name}</strong> بنجاح!`);
+
+    document.getElementById('reg-name').value = '';
+    document.getElementById('reg-dept').value = '';
+    document.getElementById('reg-preview').innerHTML = '';
+    capturedFaceBlob = null;
+
+  } catch (e) {
+    showResult('reg-result', 'error', 'خطأ في الاتصال بالسيرفر');
+  }
+}
+
+// ══ Logs Table ═════════════════════════════════════════════
+async function loadLogs() {
+  const name   = document.getElementById('filter-name').value;
+  const action = document.getElementById('filter-action').value;
+  let url = `${API}/attendance/logs?limit=50`;
+  if (name)   url += `&employee_name=${encodeURIComponent(name)}`;
+  if (action) url += `&action=${action}`;
+
+  try {
+    const res  = await fetch(url);
+    const data = await res.json();
+    const body = document.getElementById('logs-body');
+
+    if (!data.length) {
+      body.innerHTML = `<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:30px">لا توجد بيانات</td></tr>`;
+      return;
+    }
+
+    body.innerHTML = data.map((r, i) => `
+      <tr>
+        <td style="color:var(--muted)">${i + 1}</td>
+        <td style="font-weight:600">${r.employee_name}</td>
+        <td><span class="badge ${r.action === 'in' ? 'badge-in' : 'badge-out'}">
+          ${r.action === 'in' ? 'حضور' : 'خروج'}</span></td>
+        <td style="font-size:12px;color:var(--muted)">${new Date(r.timestamp).toLocaleString('ar-EG')}</td>
+        <td style="font-size:12px;color:var(--muted)">${r.confidence ? (r.source || '—') : (r.source || '—')}</td>
+      </tr>`).join('');
+  } catch {
+    document.getElementById('logs-body').innerHTML =
+      `<tr><td colspan="5" style="text-align:center;color:var(--danger);padding:20px">خطأ في تحميل البيانات</td></tr>`;
+  }
+}
+
+// ══ Helper ═════════════════════════════════════════════════
+function showResult(id, type, html) {
+  const el = document.getElementById(id);
+  el.className = `result-box result-${type}`;
+  el.innerHTML = html;
+}
+
+window.addEventListener('beforeunload', () => {
+  if (camStream)    camStream.getTracks().forEach(t => t.stop());
+  if (regCamStream) regCamStream.getTracks().forEach(t => t.stop());
+});
+</script>
+</body>
+</html>
