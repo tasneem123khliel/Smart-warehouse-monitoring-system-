@@ -1,0 +1,25 @@
+# ══════════════════════════════════════════
+#  requirements.txt
+#  Smart Warehouse Monitoring System — API
+# ══════════════════════════════════════════
+
+# API framework
+fastapi==0.111.0
+uvicorn[standard]==0.29.0
+python-multipart==0.0.9      # for UploadFile support
+
+# Database
+sqlalchemy==2.0.30
+# psycopg2-binary==2.9.9     # uncomment for PostgreSQL
+
+# YOLO inference
+ultralytics>=8.0.0
+
+# Computer vision
+opencv-python>=4.8.0
+
+# HTTP client (used by attendance_main.py to call the API)
+requests>=2.31.0
+
+# Data validation (comes with fastapi, pinned for stability)
+pydantic>=2.0.0
